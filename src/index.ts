@@ -177,6 +177,12 @@ program
       ensureNotCancelled(result);
       packageManager = result;
     }
+    if (packageManager === "yarn") {
+      await touch(join(cwd(), "yarn.lock"));
+      childProcess.execFileSync(packageManager, ["set", "version", "stable"], {
+        stdio: "inherit",
+      });
+    }
     const commands = packageManagers[packageManager];
     childProcess.execFileSync(packageManager, [commands.init.command], {
       stdio: "inherit",
@@ -187,6 +193,7 @@ program
     delete packageJson.main;
 
     safeAssign(packageJson, {
+      version: packageJson.version ?? "1.0.0",
       type: "module",
       main: "./dist/index.cjs",
       module: "./dist/index.js",
