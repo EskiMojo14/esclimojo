@@ -4,11 +4,16 @@ import { Option, program } from "commander";
 import { name, version, description } from "../package.json";
 import { array, object, optional, parse, picklist, string } from "valibot";
 import type { PackageJson } from "type-fest";
-import { readFileSync, writeFileSync } from "fs";
 import { cwd } from "process";
 import { join } from "path";
 import type { Options } from "tsup";
-import { ensureNotCancelled, safeAssign, touch } from "./util";
+import {
+  ensureNotCancelled,
+  getPackageJson,
+  safeAssign,
+  touch,
+  writePackageJson,
+} from "./util";
 import { confirm, select, spinner, text } from "@clack/prompts";
 
 const packageManagers = {
@@ -50,7 +55,9 @@ const defaultTsupConfig = {
 
 program.name(name).version(version).description(description);
 
-async function addEntrypoint(packageJson: PackageJson, entrypoint: string) {
+async function addEntrypoint(entrypoint: string) {
+  const packageJson = await getPackageJson();
+
   const exp = (packageJson.exports ??= {});
 
   if (typeof exp !== "object" || Array.isArray(exp)) {
@@ -84,15 +91,14 @@ async function addEntrypoint(packageJson: PackageJson, entrypoint: string) {
     types: `../dist/${entrypoint}.d.ts`,
     files: ["../dist"],
   };
-  await touch(
-    join(packagePath, "package.json"),
-    JSON.stringify(individualPackageJson, undefined, 2),
-    { encoding: "utf-8" }
-  );
+  await writePackageJson(individualPackageJson, packagePath);
+
   await touch(join(cwd(), `src/${entrypoint}.ts`));
+
+  await writePackageJson(packageJson);
 }
 
-async function promptEntrypoint(packageJson: PackageJson, proceed = false) {
+async function promptEntrypoint(proceed = false) {
   if (!proceed) {
     const confirmResult = await confirm({
       message: "Do you want to add any more entry points?",
@@ -108,12 +114,12 @@ async function promptEntrypoint(packageJson: PackageJson, proceed = false) {
     const s = spinner();
     s.start(`Adding entry point: ${entrypoint}`);
     try {
-      await addEntrypoint(packageJson, entrypoint);
+      await addEntrypoint(entrypoint);
       s.stop(`Added entry point: ${entrypoint}`);
     } catch (e) {
       s.stop(`Failed to add entry point: ${entrypoint}`);
     }
-    await promptEntrypoint(packageJson);
+    await promptEntrypoint();
   }
 }
 
@@ -184,11 +190,7 @@ program
       }
     );
 
-    const pkgJsonPath = join(cwd(), "package.json");
-
-    const packageJson = JSON.parse(
-      readFileSync(pkgJsonPath, { encoding: "utf-8" })
-    ) as PackageJson;
+    const packageJson = await getPackageJson();
 
     safeAssign(packageJson, {
       type: "module",
@@ -225,12 +227,14 @@ program
 
     await touch(join(cwd(), "src/index.ts"));
 
+    await writePackageJson(packageJson);
+
     if (entryPoints?.length) {
       const s = spinner();
       s.start("Adding entry points");
       try {
         for (const entrypoint of entryPoints) {
-          await addEntrypoint(packageJson, entrypoint);
+          await addEntrypoint(entrypoint);
         }
         s.stop("Entry points added");
       } catch (e) {
@@ -239,11 +243,7 @@ program
       }
     }
 
-    await promptEntrypoint(packageJson);
-
-    writeFileSync(pkgJsonPath, JSON.stringify(packageJson, undefined, 2), {
-      encoding: "utf-8",
-    });
+    await promptEntrypoint();
   });
 
 program
@@ -252,18 +252,12 @@ program
   .action(async (args: unknown) => {
     const entryPoints = parse(initOptionsSchema.entries.entryPoints, args);
 
-    const pkgJsonPath = join(cwd(), "package.json");
-
-    const packageJson = JSON.parse(
-      readFileSync(pkgJsonPath, { encoding: "utf-8" })
-    ) as PackageJson;
-
     if (entryPoints?.length) {
       const s = spinner();
       s.start("Adding entry points");
       try {
         for (const entrypoint of entryPoints) {
-          await addEntrypoint(packageJson, entrypoint);
+          await addEntrypoint(entrypoint);
         }
         s.stop("Entry points added");
       } catch (e) {
@@ -271,14 +265,10 @@ program
         throw e;
       }
 
-      await promptEntrypoint(packageJson);
+      await promptEntrypoint();
     } else {
-      await promptEntrypoint(packageJson, true);
+      await promptEntrypoint(true);
     }
-
-    writeFileSync(pkgJsonPath, JSON.stringify(packageJson, undefined, 2), {
-      encoding: "utf-8",
-    });
   });
 
 program.parse();
