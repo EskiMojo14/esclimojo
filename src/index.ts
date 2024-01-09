@@ -2,7 +2,15 @@
 import childProcess from "child_process";
 import { Option, program } from "commander";
 import { name, version, description } from "../package.json";
-import { array, object, optional, parse, picklist, string } from "valibot";
+import {
+  array,
+  boolean,
+  object,
+  optional,
+  parse,
+  picklist,
+  string,
+} from "valibot";
 import type { PackageJson } from "type-fest";
 import { cwd } from "process";
 import { dirname, join } from "path";
@@ -18,9 +26,9 @@ import {
 import { confirm, intro, outro, select, spinner, text } from "@clack/prompts";
 import { promisify } from "util";
 import * as templates from "./templates";
-import { constants, copyFile, readdir } from "fs/promises";
+import { constants, copyFile, readdir, access, readFile } from "fs/promises";
 import color from "picocolors";
-import { S_BAR } from "./logging";
+import { getLogger } from "./logging";
 import { fileURLToPath } from "url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -175,7 +183,7 @@ program
     await withSpinner(
       async () => {
         const templates = await readdir(join(__dirname, "templates"));
-        let logged = false;
+        const logger = getLogger();
         for (const template of templates) {
           try {
             await copyFile(
@@ -184,17 +192,14 @@ program
               constants.COPYFILE_EXCL
             );
           } catch {
-            logged = true;
-            process.stdout.write(
+            logger.log(
               color.gray(
-                `${S_BAR}  couldn't copy ${template}, assuming it already exists\n`
+                `couldn't copy ${template}, assuming it already exists\n`
               )
             );
           }
         }
-        if (logged) {
-          process.stdout.write(color.gray(S_BAR) + "\n");
-        }
+        logger.close();
       },
       s,
       {
@@ -353,6 +358,57 @@ program
       await promptEntrypoint(s, true);
     }
     outro("All done!");
+  });
+
+const copyTemplateOptions = object({
+  yes: optional(boolean()),
+});
+
+program
+  .command("copy-template")
+  .option("-y, --yes", "override existing file without asking")
+  .argument("<filename>")
+  .action(async (file, options) => {
+    intro("Copy template");
+    const filename = parse(string(), file);
+    let { yes } = parse(copyTemplateOptions, options);
+    try {
+      await access(join(__dirname, "templates", filename), constants.R_OK);
+    } catch (e) {
+      program.error(`Template "${filename}" not found`);
+    }
+    if (!yes) {
+      let fileAlreadyExists = false;
+      try {
+        await access(join(cwd(), filename), constants.F_OK);
+        fileAlreadyExists = true;
+      } catch {
+        // file doesn't exist
+      }
+      if (fileAlreadyExists) {
+        const overwrite = await confirm({
+          message: "File already exists, overwrite?",
+        });
+        ensureNotCancelled(overwrite);
+        yes = overwrite;
+      }
+    }
+    if (yes) {
+      await withSpinner(
+        () =>
+          copyFile(
+            join(__dirname, "templates", filename),
+            join(cwd(), filename)
+          ),
+        undefined,
+        {
+          pending: `Copying template: ${filename}`,
+          fulfilled: `Template ${filename} copied`,
+          rejected: `Failed to copy template: ${filename}`,
+        }
+      );
+    }
+    outro("Done");
   });
 
 program.parse();
