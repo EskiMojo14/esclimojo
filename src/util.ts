@@ -1,3 +1,4 @@
+import { isCancel } from "@clack/prompts";
 import type { ObjectEncodingOptions, WriteFileOptions } from "fs";
 import { mkdir, writeFile } from "fs/promises";
 import { dirname } from "path";
@@ -13,4 +14,10 @@ export async function touch(
 ) {
   await mkdir(dirname(filepath), { recursive: true });
   return writeFile(filepath, contents, { encoding: "utf-8", ...options });
+}
+
+export function ensureNotCancelled<T>(result: T | symbol): asserts result is T {
+  if (isCancel(result)) {
+    process.exit();
+  }
 }

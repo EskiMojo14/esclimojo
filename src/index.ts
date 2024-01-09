@@ -1,35 +1,17 @@
 #! /usr/bin/env node
 import childProcess from "child_process";
 import { Option, program } from "commander";
-import { version } from "../package.json";
-import {
-  array,
-  nonOptional,
-  object,
-  optional,
-  parse,
-  picklist,
-  string,
-} from "valibot";
+import { name, version, description } from "../package.json";
+import { array, object, optional, parse, picklist, string } from "valibot";
 import type { PackageJson } from "type-fest";
 import { readFileSync, writeFileSync } from "fs";
 import { cwd } from "process";
 import { join } from "path";
 import type { Options } from "tsup";
-import { safeAssign, touch } from "./util";
+import { ensureNotCancelled, safeAssign, touch } from "./util";
+import { confirm, select, spinner, text } from "@clack/prompts";
 
 const packageManagers = {
-  npm: {
-    init: {
-      command: "init",
-    },
-    install: {
-      command: "install",
-      args: {
-        dev: "-D",
-      },
-    },
-  },
   yarn: {
     init: {
       command: "init",
@@ -41,7 +23,22 @@ const packageManagers = {
       },
     },
   },
+  npm: {
+    init: {
+      command: "init",
+    },
+    install: {
+      command: "install",
+      args: {
+        dev: "-D",
+      },
+    },
+  },
 };
+
+const supportedManagers = Object.keys(packageManagers) as Array<
+  keyof typeof packageManagers
+>;
 
 const defaultTsupConfig = {
   entry: ["src/index.ts"],
@@ -51,7 +48,7 @@ const defaultTsupConfig = {
   minify: true,
 } satisfies Options;
 
-program.name("esclimojo").version(version);
+program.name(name).version(version).description(description);
 
 async function addEntrypoint(packageJson: PackageJson, entrypoint: string) {
   const exp = (packageJson.exports ??= {});
@@ -95,6 +92,31 @@ async function addEntrypoint(packageJson: PackageJson, entrypoint: string) {
   await touch(join(cwd(), `src/${entrypoint}.ts`));
 }
 
+async function promptEntrypoint(packageJson: PackageJson, proceed = false) {
+  if (!proceed) {
+    const confirmResult = await confirm({
+      message: "Do you want to add any more entry points?",
+    });
+    ensureNotCancelled(confirmResult);
+    proceed = confirmResult;
+  }
+  if (proceed) {
+    const entrypoint = await text({
+      message: "What is the entry point name?",
+    });
+    ensureNotCancelled(entrypoint);
+    const s = spinner();
+    s.start(`Adding entry point: ${entrypoint}`);
+    try {
+      await addEntrypoint(packageJson, entrypoint);
+      s.stop(`Added entry point: ${entrypoint}`);
+    } catch (e) {
+      s.stop(`Failed to add entry point: ${entrypoint}`);
+    }
+    await promptEntrypoint(packageJson);
+  }
+}
+
 const devDeps: Record<string, true | string> = {
   "@arethetypeswrong/cli": true,
   "@typescript-eslint/eslint-plugin": true,
@@ -119,10 +141,9 @@ const depList = Object.entries(devDeps).map(
 const initOptionsSchema = object({
   packageManager: optional(
     picklist(
-      Object.keys(packageManagers) as Array<keyof typeof packageManagers>,
+      supportedManagers,
       `Must be one of supported: ${Object.keys(packageManagers).join(", ")}`
-    ),
-    "yarn"
+    )
   ),
   entryPoints: optional(array(string())),
 });
@@ -130,16 +151,26 @@ const initOptionsSchema = object({
 program
   .command("init")
   .addOption(
-    new Option("-p, --package-manager <manager>", "package manager to use")
-      .choices(Object.keys(packageManagers))
-      .default("yarn")
+    new Option(
+      "-p, --package-manager <manager>",
+      "package manager to use"
+    ).choices(Object.keys(packageManagers))
   )
   .option("-e, --entry-points <entrypoints...>", "extra entry points")
   .action(async (options: unknown) => {
-    const { packageManager, entryPoints = [] } = parse(
-      initOptionsSchema,
-      options
-    );
+    let { packageManager, entryPoints } = parse(initOptionsSchema, options);
+    if (!packageManager) {
+      const result = await select<
+        Array<{ value: keyof typeof packageManagers }>,
+        keyof typeof packageManagers
+      >({
+        message: "Choose a package manager",
+        initialValue: "yarn",
+        options: supportedManagers.map((value) => ({ value })),
+      });
+      ensureNotCancelled(result);
+      packageManager = result;
+    }
     const commands = packageManagers[packageManager];
     childProcess.execFileSync(packageManager, [commands.init.command], {
       stdio: "inherit",
@@ -194,9 +225,21 @@ program
 
     await touch(join(cwd(), "src/index.ts"));
 
-    for (const entrypoint of entryPoints) {
-      await addEntrypoint(packageJson, entrypoint);
+    if (entryPoints?.length) {
+      const s = spinner();
+      s.start("Adding entry points");
+      try {
+        for (const entrypoint of entryPoints) {
+          await addEntrypoint(packageJson, entrypoint);
+        }
+        s.stop("Entry points added");
+      } catch (e) {
+        s.stop("Failed to add entry points");
+        throw e;
+      }
     }
+
+    await promptEntrypoint(packageJson);
 
     writeFileSync(pkgJsonPath, JSON.stringify(packageJson, undefined, 2), {
       encoding: "utf-8",
@@ -205,12 +248,9 @@ program
 
 program
   .command("add-entrypoints")
-  .argument("<entrypoints...>")
+  .argument("[entrypoints...]")
   .action(async (args: unknown) => {
-    const entryPoints = parse(
-      nonOptional(initOptionsSchema.entries.entryPoints),
-      args
-    );
+    const entryPoints = parse(initOptionsSchema.entries.entryPoints, args);
 
     const pkgJsonPath = join(cwd(), "package.json");
 
@@ -218,8 +258,22 @@ program
       readFileSync(pkgJsonPath, { encoding: "utf-8" })
     ) as PackageJson;
 
-    for (const entrypoint of entryPoints) {
-      await addEntrypoint(packageJson, entrypoint);
+    if (entryPoints?.length) {
+      const s = spinner();
+      s.start("Adding entry points");
+      try {
+        for (const entrypoint of entryPoints) {
+          await addEntrypoint(packageJson, entrypoint);
+        }
+        s.stop("Entry points added");
+      } catch (e) {
+        s.stop("Failed to add entry points");
+        throw e;
+      }
+
+      await promptEntrypoint(packageJson);
+    } else {
+      await promptEntrypoint(packageJson, true);
     }
 
     writeFileSync(pkgJsonPath, JSON.stringify(packageJson, undefined, 2), {
