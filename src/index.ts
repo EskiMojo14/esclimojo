@@ -5,7 +5,7 @@ import { name, version, description } from "../package.json";
 import { array, object, optional, parse, picklist, string } from "valibot";
 import type { PackageJson } from "type-fest";
 import { cwd } from "process";
-import { join } from "path";
+import { basename, dirname, join } from "path";
 import type { Options } from "tsup";
 import {
   ensureNotCancelled,
@@ -182,15 +182,9 @@ program
       stdio: "inherit",
     });
 
-    childProcess.execFileSync(
-      packageManager,
-      [commands.install.command, commands.install.args.dev, ...depList],
-      {
-        stdio: "inherit",
-      }
-    );
-
     const packageJson = await getPackageJson();
+
+    delete packageJson.main;
 
     safeAssign(packageJson, {
       type: "module",
@@ -228,6 +222,14 @@ program
     await touch(join(cwd(), "src/index.ts"));
 
     await writePackageJson(packageJson);
+
+    childProcess.execFileSync(
+      packageManager,
+      [commands.install.command, commands.install.args.dev, ...depList],
+      {
+        stdio: "inherit",
+      }
+    );
 
     if (entryPoints?.length) {
       const s = spinner();
