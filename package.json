@@ -55,6 +55,7 @@
       "cjs"
     ],
     "minify": true,
-    "sourcemap": true
+    "sourcemap": true,
+    "publicDir": true
   }
 }

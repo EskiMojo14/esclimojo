@@ -17,6 +17,8 @@ import {
 } from "./util";
 import { confirm, select, spinner, text } from "@clack/prompts";
 import { promisify } from "util";
+import * as templates from "./templates";
+import { copyFile, readdir } from "fs/promises";
 
 const execFile = promisify(childProcess.execFile);
 
@@ -57,14 +59,6 @@ const supportedManagers = Object.keys(
   packageManagers
 ) as Array<SupportedManager>;
 
-const defaultTsupConfig = {
-  entry: ["src/index.ts"],
-  sourcemap: true,
-  format: ["esm", "cjs"],
-  dts: true,
-  minify: true,
-} satisfies Options;
-
 program.name(name).version(version).description(description);
 
 async function addEntrypoint(entrypoint: string) {
@@ -82,7 +76,7 @@ async function addEntrypoint(entrypoint: string) {
   };
 
   const tsupConfig: Options = ((packageJson.tsup as Options | undefined) ??=
-    defaultTsupConfig);
+    templates.defaultTsupConfig);
 
   (packageJson.files ??= []).push(entrypoint);
   const entry = (tsupConfig.entry ??= []);
@@ -92,18 +86,15 @@ async function addEntrypoint(entrypoint: string) {
   } else {
     entry[entrypoint] = entryPath;
   }
-  const packagePath = join(cwd(), entrypoint);
 
-  const individualPackageJson: PackageJson = {
-    name: packageJson.name + `-${entrypoint}`,
-    version: packageJson.version ?? "1.0.0",
-    type: "module",
-    main: `../dist/${entrypoint}.cjs`,
-    module: `../dist/${entrypoint}.js`,
-    types: `../dist/${entrypoint}.d.ts`,
-    files: ["../dist"],
-  };
-  await writePackageJson(individualPackageJson, packagePath);
+  await writePackageJson(
+    templates.getEntrypointPackageJson(
+      packageJson.name,
+      packageJson.version,
+      entrypoint
+    ),
+    join(cwd(), entrypoint)
+  );
 
   await touch(join(cwd(), `src/${entrypoint}.ts`));
 
@@ -173,6 +164,13 @@ program
   )
   .option("-e, --entry-points <entrypoints...>", "extra entry points")
   .action(async (options: unknown) => {
+    const templates = await readdir(join(__dirname, "templates"));
+    for (const template of templates) {
+      await copyFile(
+        join(__dirname, "templates", template),
+        join(cwd(), template)
+      );
+    }
     const s = spinner();
     await execFile("git", ["init"]);
 
@@ -244,7 +242,7 @@ program
           "lint-staged": {
             "*.{ts,md}": "prettier --write",
           },
-          tsup: defaultTsupConfig,
+          tsup: templates.defaultTsupConfig as PackageJson[string],
         });
 
         await touch(join(cwd(), "src/index.ts"));
