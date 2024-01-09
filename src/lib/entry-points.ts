@@ -4,8 +4,8 @@ import { confirm, text } from "@clack/prompts";
 import arrgv from "arrgv";
 import type { Options } from "tsup";
 import { ensureNotCancelled, tasks } from "./clack";
+import { getPackageJson, touch, writePackageJson } from "./fs";
 import { defaultTsupConfig, getEntrypointPackageJson } from "./templates";
-import { getPackageJson, touch, writePackageJson } from "./util";
 
 export async function addEntrypoint(entrypoint: string) {
   const packageJson = await getPackageJson();

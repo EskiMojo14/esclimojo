@@ -11,15 +11,11 @@ import { __dirname } from "../constants";
 import { ensureNotCancelled, tasks } from "../lib/clack";
 import { deps, devDeps, processDepMap } from "../lib/deps";
 import { addEntrypoint, promptEntrypoints } from "../lib/entry-points";
+import { getPackageJson, touch, writePackageJson } from "../lib/fs";
 import type { SupportedManager } from "../lib/package-managers";
 import { packageManagers, supportedManagers } from "../lib/package-managers";
 import * as templates from "../lib/templates";
-import {
-  getPackageJson,
-  safeAssign,
-  touch,
-  writePackageJson,
-} from "../lib/util";
+import { safeAssign } from "../lib/util";
 
 const execFile = promisify(execFileAsync);
 
