@@ -26,6 +26,13 @@ module.exports = {
       { fixStyle: "separate-type-imports" },
     ],
     "@typescript-eslint/array-type": ["error", { default: "generic" }],
+    "no-restricted-globals": [
+      "error",
+      {
+        name: "__dirname",
+        message: "Unavailable in ESM, import from constants",
+      },
+    ],
   },
   overrides: [
     {

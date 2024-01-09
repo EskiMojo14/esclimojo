@@ -5,6 +5,7 @@ import { join } from "path";
 import { cwd } from "process";
 import { object, optional, boolean, parse, string } from "valibot";
 import { ensureNotCancelled, withSpinner } from "../lib/util";
+import { __dirname } from "../constants";
 
 const copyTemplateOptions = object({
   yes: optional(boolean()),
