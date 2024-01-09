@@ -51,9 +51,11 @@ const packageManagers = {
   },
 };
 
-const supportedManagers = Object.keys(packageManagers) as Array<
-  keyof typeof packageManagers
->;
+type SupportedManager = keyof typeof packageManagers;
+
+const supportedManagers = Object.keys(
+  packageManagers
+) as Array<SupportedManager>;
 
 const defaultTsupConfig = {
   entry: ["src/index.ts"],
@@ -108,7 +110,7 @@ async function addEntrypoint(entrypoint: string) {
   await writePackageJson(packageJson);
 }
 
-async function promptEntrypoint(proceed = false) {
+async function promptEntrypoint(s = spinner(), proceed = false) {
   if (!proceed) {
     const confirmResult = await confirm({
       message: "Do you want to add any more entry points?",
@@ -121,12 +123,12 @@ async function promptEntrypoint(proceed = false) {
       message: "What is the entry point name?",
     });
     ensureNotCancelled(entrypoint);
-    await withSpinner(() => addEntrypoint(entrypoint), undefined, {
+    await withSpinner(() => addEntrypoint(entrypoint), s, {
       pending: `Adding entry point: ${entrypoint}`,
       fulfilled: `Added entry point: ${entrypoint}`,
       rejected: `Failed to add entry point: ${entrypoint}`,
     });
-    await promptEntrypoint();
+    await promptEntrypoint(s);
   }
 }
 
@@ -177,8 +179,8 @@ program
     let { packageManager, entryPoints } = parse(initOptionsSchema, options);
     if (!packageManager) {
       const result = await select<
-        Array<{ value: keyof typeof packageManagers }>,
-        keyof typeof packageManagers
+        Array<{ value: SupportedManager }>,
+        SupportedManager
       >({
         message: "Choose a package manager",
         initialValue: "yarn",
@@ -288,7 +290,7 @@ program
       );
     }
 
-    await promptEntrypoint();
+    await promptEntrypoint(s);
   });
 
 program
@@ -313,9 +315,9 @@ program
         }
       );
 
-      await promptEntrypoint();
+      await promptEntrypoint(s);
     } else {
-      await promptEntrypoint(true);
+      await promptEntrypoint(s, true);
     }
   });
 
