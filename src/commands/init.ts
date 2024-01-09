@@ -69,6 +69,7 @@ program
       packageManager = result;
     }
     if (packageManager === "yarn") {
+      await touch(join(cwd(), ".yarnrc.yaml"), "nodeLinker: node-modules");
       await touch(join(cwd(), "yarn.lock"));
       await tasks([
         {
