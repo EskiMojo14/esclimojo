@@ -1,9 +1,9 @@
-import { isCancel } from "@clack/prompts";
+import { isCancel, spinner } from "@clack/prompts";
 import type { ObjectEncodingOptions, WriteFileOptions } from "fs";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { dirname, join } from "path";
 import { cwd } from "process";
-import { PackageJson } from "type-fest";
+import type { PackageJson } from "type-fest";
 
 type NoInfer<T> = [T][T extends any ? 0 : never];
 export const safeAssign: <T>(target: T, sources: Partial<NoInfer<T>>) => T =
@@ -35,4 +35,20 @@ export async function writePackageJson(contents: PackageJson, dir = cwd()) {
     join(dir, "package.json"),
     JSON.stringify(contents, undefined, 2)
   );
+}
+
+export async function withSpinner<T>(
+  cb: () => T | Promise<T>,
+  s = spinner(),
+  messages: Partial<Record<"pending" | "fulfilled" | "rejected", string>> = {}
+) {
+  s.start(messages.pending);
+  try {
+    const r = await cb();
+    s.stop(messages.fulfilled);
+    return r;
+  } catch (e) {
+    s.stop(messages.rejected);
+    throw e;
+  }
 }
