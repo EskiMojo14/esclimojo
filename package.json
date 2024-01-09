@@ -2,9 +2,7 @@
   "name": "esclimojo",
   "version": "1.0.0",
   "description": "a cli",
-  "bin": {
-    "esclimojo": "dist/index.js"
-  },
+  "bin": "dist/index.js",
   "scripts": {
     "prepare": "husky install",
     "prebuild": "yarn type",
@@ -57,5 +55,6 @@
     "@clack/prompts": "^0.7.0",
     "commander": "^11.1.0",
     "valibot": "^0.25.0"
-  }
+  },
+  "packageManager": "yarn@4.0.2"
 }
