@@ -1633,7 +1633,9 @@ __metadata:
     eslint-plugin-import: "npm:^2.29.1"
     eslint-plugin-vitest: "npm:^0.3.20"
     husky: "npm:^8.0.3"
+    is-unicode-supported: "npm:^2.0.0"
     lint-staged: "npm:^15.2.0"
+    picocolors: "npm:^1.0.0"
     publint: "npm:^0.2.7"
     tsup: "npm:^8.0.1"
     type-fest: "npm:^4.9.0"
@@ -2653,7 +2655,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"is-unicode-supported@npm:*":
+"is-unicode-supported@npm:*, is-unicode-supported@npm:^2.0.0":
   version: 2.0.0
   resolution: "is-unicode-supported@npm:2.0.0"
   checksum: 3013dfb8265fe9f9a0d1e9433fc4e766595631a8d85d60876c457b4bedc066768dab1477c553d02e2f626d88a4e019162706e04263c94d74994ef636a33b5f94

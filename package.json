@@ -35,6 +35,8 @@
     "@clack/prompts": "^0.7.0",
     "arrgv": "^1.0.2",
     "commander": "^11.1.0",
+    "is-unicode-supported": "^2.0.0",
+    "picocolors": "^1.0.0",
     "valibot": "^0.25.0"
   },
   "repository": "https://github.com/EskiMojo14/esclimojo.git",
