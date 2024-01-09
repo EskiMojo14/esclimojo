@@ -3,15 +3,16 @@ import { readdir } from "fs/promises";
 import { join } from "path";
 import { cwd } from "process";
 import { promisify } from "util";
-import { intro, outro, select } from "@clack/prompts";
+import { intro, log, outro, select } from "@clack/prompts";
 import { Option, program } from "commander";
+import picocolors from "picocolors";
 import type { PackageJson } from "type-fest";
 import { object, optional, picklist, array, string, parse } from "valibot";
 import { __dirname } from "../constants";
 import { ensureNotCancelled, tasks } from "../lib/clack";
 import { deps, devDeps, processDepMap } from "../lib/deps";
 import { addEntrypoint, promptEntrypoints } from "../lib/entry-points";
-import { getPackageJson, touch, writePackageJson } from "../lib/fs";
+import { getPackageJson, isFile, touch, writePackageJson } from "../lib/fs";
 import type { SupportedManager } from "../lib/package-managers";
 import { packageManagers, supportedManagers } from "../lib/package-managers";
 import * as templates from "../lib/templates";
@@ -41,7 +42,9 @@ program
   .action(async (options: unknown) => {
     intro("Project initialisation");
 
-    const allTemplates = await readdir(join(__dirname, "templates"));
+    const allTemplates = (
+      await readdir(join(__dirname, "templates"), { recursive: true })
+    ).filter((filename) => isFile(join(__dirname, "templates", filename)));
     for (const template of allTemplates) {
       await templates.copyTemplate(template);
     }
@@ -64,8 +67,21 @@ program
       ensureNotCancelled(result);
       packageManager = result;
     }
+
+    let pmTemplates: Array<string> = [];
+    try {
+      pmTemplates = await readdir(
+        join(__dirname, "pm-templates", packageManager),
+        { recursive: true }
+      );
+    } catch {
+      log.info(picocolors.gray("No package manager specific templates"));
+    }
+    for (const pmTemplate of pmTemplates) {
+      await templates.copyTemplate(pmTemplate, undefined, packageManager);
+    }
+
     if (packageManager === "yarn") {
-      await touch(join(cwd(), ".yarnrc.yml"), "nodeLinker: node-modules");
       await touch(join(cwd(), "yarn.lock"));
       await tasks([
         {

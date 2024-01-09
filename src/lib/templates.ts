@@ -7,6 +7,8 @@ import type { Options } from "tsup";
 import type { PackageJson } from "type-fest";
 import { __dirname } from "../constants";
 import { ensureNotCancelled, tasks } from "./clack";
+import { touch } from "./fs";
+import type { SupportedManager } from "./package-managers";
 
 export const defaultTsupConfig: Options = {
   entry: ["src/index.ts"],
@@ -37,7 +39,8 @@ export function getEntrypointPackageJson(
 
 export async function copyTemplate(
   template: string,
-  promptBeforeOverwrite = true
+  promptBeforeOverwrite = true,
+  packageManager?: SupportedManager
 ) {
   let approved = !promptBeforeOverwrite;
   if (!approved) {
@@ -59,18 +62,31 @@ export async function copyTemplate(
     }
   }
   if (approved) {
+    const templateType = packageManager
+      ? picocolors.bold(packageManager) + " "
+      : "";
     await tasks([
       {
-        title: "Copying template: " + picocolors.yellow(`"${template}"`),
+        title:
+          `Copying ${templateType}template: ` +
+          picocolors.yellow(`"${template}"`),
         async task() {
-          await copyFile(
-            join(__dirname, "templates", template),
-            join(cwd(), template)
-          );
-          return `Template ${picocolors.green(`"${template}"`)} copied`;
+          const source = packageManager
+            ? join(__dirname, "pm-templates", packageManager, template)
+            : join(__dirname, "templates", template);
+          const dest = join(cwd(), template);
+          // touch first to ensure dir exists
+          await touch(dest);
+          await copyFile(source, dest);
+          return `${
+            templateType ? templateType + "t" : "T"
+          }emplate ${picocolors.green(`"${template}"`)} copied`;
         },
         getError() {
-          return "Failed to copy template: " + picocolors.red(`"${template}"`);
+          return (
+            `Failed to copy ${templateType}template: ` +
+            picocolors.red(`"${template}"`)
+          );
         },
       },
     ]);

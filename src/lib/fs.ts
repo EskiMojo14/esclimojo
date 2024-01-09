@@ -1,4 +1,8 @@
-import type { ObjectEncodingOptions, WriteFileOptions } from "fs";
+import {
+  lstatSync,
+  type ObjectEncodingOptions,
+  type WriteFileOptions,
+} from "fs";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { dirname, join } from "path";
 import { cwd } from "process";
@@ -37,4 +41,8 @@ export async function writeTsconfig(contents: TsConfigJson, dir = cwd()) {
     join(dir, "tsconfig.json"),
     JSON.stringify(contents, undefined, 2)
   );
+}
+
+export function isFile(filename: string) {
+  return lstatSync(filename).isFile();
 }
