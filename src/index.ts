@@ -187,7 +187,7 @@ program
             logged = true;
             process.stdout.write(
               color.gray(
-                `${S_BAR}  ${template} already exists, skipping template\n`
+                `${S_BAR}  couldn't copy ${template}, assuming it already exists\n`
               )
             );
           }
