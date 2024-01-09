@@ -32,6 +32,10 @@ module.exports = {
         name: "__dirname",
         message: "Unavailable in ESM, import from constants",
       },
+      {
+        name: "__filename",
+        message: "Unavailable in ESM, import from constants",
+      },
     ],
     "import/order": [
       "error",

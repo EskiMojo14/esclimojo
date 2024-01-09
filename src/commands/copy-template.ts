@@ -1,59 +1,56 @@
-import { access, constants, copyFile } from "fs/promises";
+import { readdir } from "fs/promises";
 import { join } from "path";
-import { cwd } from "process";
-import { confirm, intro, outro } from "@clack/prompts";
+import { intro, multiselect, outro } from "@clack/prompts";
 import { program } from "commander";
-import { object, optional, boolean, parse, string } from "valibot";
+import picocolors from "picocolors";
+import { object, optional, boolean, parse, string, array } from "valibot";
 import { __dirname } from "../constants";
-import { ensureNotCancelled, withSpinner } from "../lib/util";
+import { getLogger } from "../lib/logging";
+import { copyTemplate } from "../lib/templates";
+import { ensureNotCancelled } from "../lib/util";
 
 const copyTemplateOptions = object({
   yes: optional(boolean()),
 });
 
 program
-  .command("copy-template")
+  .command("copy-templates")
   .option("-y, --yes", "override existing file without asking")
-  .argument("<filename>")
-  .action(async (file, options) => {
-    intro("Copy template");
-    const filename = parse(string(), file);
-    let { yes } = parse(copyTemplateOptions, options);
-    try {
-      await access(join(__dirname, "templates", filename), constants.R_OK);
-    } catch (e) {
-      program.error(`Template "${filename}" not found`);
+  .argument("[filenames...]")
+  .action(async (files, options) => {
+    intro("Copy templates");
+    const templates = await readdir(join(__dirname, "templates"));
+    let filenames = parse(optional(array(string())), files);
+    const { yes } = parse(copyTemplateOptions, options);
+
+    if (!filenames?.length) {
+      const selected = await multiselect<Array<{ value: string }>, string>({
+        message: "Which templates should be copied?",
+        options: templates.map((value) => ({ value })),
+      });
+      ensureNotCancelled(selected);
+      filenames = selected;
     }
-    if (!yes) {
-      let fileAlreadyExists = false;
-      try {
-        await access(join(cwd(), filename), constants.F_OK);
-        fileAlreadyExists = true;
-      } catch {
-        // file doesn't exist
+
+    const logger = getLogger();
+    let i = filenames.length;
+    while (i--) {
+      const name = filenames[i] ?? "";
+      const valid = templates.includes(name);
+      if (!valid) {
+        logger.log(
+          picocolors.gray(
+            `"${name}" is not a valid template and will be ignored`
+          )
+        );
+        filenames.splice(i, 1);
       }
-      if (fileAlreadyExists) {
-        const overwrite = await confirm({
-          message: "File already exists, overwrite?",
-        });
-        ensureNotCancelled(overwrite);
-        yes = overwrite;
-      }
     }
-    if (yes) {
-      await withSpinner(
-        () =>
-          copyFile(
-            join(__dirname, "templates", filename),
-            join(cwd(), filename)
-          ),
-        undefined,
-        {
-          pending: `Copying template: ${filename}`,
-          fulfilled: `Template ${filename} copied`,
-          rejected: `Failed to copy template: ${filename}`,
-        }
-      );
+    logger.close();
+
+    for (const template of filenames) {
+      await copyTemplate(template, yes);
     }
+
     outro("Done");
   });

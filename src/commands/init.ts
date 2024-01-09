@@ -1,11 +1,10 @@
 import { execFile as execFileAsync } from "child_process";
-import { constants, copyFile, readdir } from "fs/promises";
+import { readdir } from "fs/promises";
 import { join } from "path";
 import { cwd } from "process";
 import { promisify } from "util";
 import { intro, outro, select, spinner } from "@clack/prompts";
 import { Option, program } from "commander";
-import color from "picocolors";
 import type { PackageJson } from "type-fest";
 import { object, optional, picklist, array, string, parse } from "valibot";
 import { __dirname } from "../constants";
@@ -49,34 +48,10 @@ program
     intro("Project initialisation");
     const s = spinner();
 
-    await withSpinner(
-      async () => {
-        const templates = await readdir(join(__dirname, "templates"));
-        const logger = getLogger();
-        for (const template of templates) {
-          try {
-            await copyFile(
-              join(__dirname, "templates", template),
-              join(cwd(), template),
-              constants.COPYFILE_EXCL
-            );
-          } catch {
-            logger.log(
-              color.gray(
-                `couldn't copy ${template}, assuming it already exists\n`
-              )
-            );
-          }
-        }
-        logger.close();
-      },
-      s,
-      {
-        pending: "Copying templates",
-        fulfilled: "Templates copied",
-        rejected: "Failed to copy templates",
-      }
-    );
+    const allTemplates = await readdir(join(__dirname, "templates"));
+    for (const template of allTemplates) {
+      await templates.copyTemplate(template);
+    }
 
     await execFile("git", ["init"]);
 
