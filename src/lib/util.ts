@@ -2,10 +2,9 @@ import type { ObjectEncodingOptions, WriteFileOptions } from "fs";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { dirname, join } from "path";
 import { cwd } from "process";
-import { isCancel, outro, spinner } from "@clack/prompts";
 import type { PackageJson, TsConfigJson } from "type-fest";
+import type { NoInfer } from "../types/util";
 
-type NoInfer<T> = [T][T extends any ? 0 : never];
 export const safeAssign: <T>(target: T, sources: Partial<NoInfer<T>>) => T =
   Object.assign;
 
@@ -16,13 +15,6 @@ export async function touch(
 ) {
   await mkdir(dirname(filepath), { recursive: true });
   return writeFile(filepath, contents, { encoding: "utf-8", ...options });
-}
-
-export function ensureNotCancelled<T>(result: T | symbol): asserts result is T {
-  if (isCancel(result)) {
-    outro("Cancelled");
-    process.exit();
-  }
 }
 
 export async function getPackageJson(dir = cwd()) {
@@ -49,21 +41,4 @@ export async function writeTsconfig(contents: TsConfigJson, dir = cwd()) {
     join(dir, "tsconfig.json"),
     JSON.stringify(contents, undefined, 2)
   );
-}
-
-export async function withSpinner<T>(
-  cb: () => T | Promise<T>,
-  s = spinner(),
-  messages: Partial<Record<"pending" | "fulfilled" | "rejected", string>> = {}
-) {
-  s.start(messages.pending);
-  try {
-    const r = await cb();
-    s.stop(messages.fulfilled);
-    return r;
-  } catch (e) {
-    s.stop(messages.rejected);
-    console.error(e);
-    throw e;
-  }
 }

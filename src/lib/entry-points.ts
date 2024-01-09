@@ -1,16 +1,11 @@
 import { join } from "path";
 import { cwd } from "process";
-import { confirm, spinner, text } from "@clack/prompts";
+import { confirm, text } from "@clack/prompts";
 import arrgv from "arrgv";
 import type { Options } from "tsup";
+import { ensureNotCancelled, tasks } from "./clack";
 import { defaultTsupConfig, getEntrypointPackageJson } from "./templates";
-import {
-  ensureNotCancelled,
-  getPackageJson,
-  touch,
-  withSpinner,
-  writePackageJson,
-} from "./util";
+import { getPackageJson, touch, writePackageJson } from "./util";
 
 export async function addEntrypoint(entrypoint: string) {
   const packageJson = await getPackageJson();
@@ -48,7 +43,7 @@ export async function addEntrypoint(entrypoint: string) {
   await writePackageJson(packageJson);
 }
 
-export async function promptEntrypoints(s = spinner(), proceed = false) {
+export async function promptEntrypoints(proceed = false) {
   if (!proceed) {
     const confirmResult = await confirm({
       message: "Do you want to add any more entry points?",
@@ -63,19 +58,19 @@ export async function promptEntrypoints(s = spinner(), proceed = false) {
     });
     ensureNotCancelled(entrypoint);
     const split = arrgv(entrypoint);
-    await withSpinner(
-      async () => {
-        for (const entrypoint of split) {
-          await addEntrypoint(entrypoint);
-        }
-      },
-      s,
+    await tasks([
       {
-        pending: `Adding entry points: ${split.join(", ")}`,
-        fulfilled: "Entry points added",
-        rejected: "Failed to add entry points",
-      }
-    );
-    await promptEntrypoints(s);
+        title: `Adding entry points: ${split.join(", ")}`,
+        async task() {
+          for (const entrypoint of split) {
+            await addEntrypoint(entrypoint);
+          }
+        },
+        getError() {
+          return "Failed to add entry points";
+        },
+      },
+    ]);
+    await promptEntrypoints();
   }
 }

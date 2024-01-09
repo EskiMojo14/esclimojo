@@ -1,35 +1,35 @@
-import { intro, outro, spinner } from "@clack/prompts";
+import { intro, outro } from "@clack/prompts";
 import { program } from "commander";
 import { array, optional, parse, string } from "valibot";
+import { tasks } from "../lib/clack";
 import { addEntrypoint, promptEntrypoints } from "../lib/entry-points";
-import { withSpinner } from "../lib/util";
 
 program
   .command("add-entrypoints")
   .argument("[entrypoints...]")
   .action(async (args: unknown) => {
     intro("Add entry points");
-    const s = spinner();
     const entryPoints = parse(optional(array(string())), args);
 
     if (entryPoints?.length) {
-      await withSpinner(
-        async () => {
-          for (const entrypoint of entryPoints) {
-            await addEntrypoint(entrypoint);
-          }
-        },
-        s,
+      await tasks([
         {
-          pending: `Adding entry points: ${entryPoints.join(", ")}`,
-          fulfilled: "Entry points added",
-          rejected: "Failed to add entry points",
-        }
-      );
+          title: `Adding entry points: ${entryPoints.join(", ")}`,
+          async task() {
+            for (const entrypoint of entryPoints) {
+              await addEntrypoint(entrypoint);
+            }
+            return "Entry points added";
+          },
+          getError() {
+            return "Failed to add entry points";
+          },
+        },
+      ]);
 
-      await promptEntrypoints(s);
+      await promptEntrypoints();
     } else {
-      await promptEntrypoints(s, true);
+      await promptEntrypoints(true);
     }
     outro("All done!");
   });

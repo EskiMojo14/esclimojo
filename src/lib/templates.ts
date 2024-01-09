@@ -2,11 +2,11 @@ import { access, constants, copyFile } from "fs/promises";
 import { join } from "path";
 import { cwd } from "process";
 import { confirm } from "@clack/prompts";
+import picocolors from "picocolors";
 import type { Options } from "tsup";
 import type { PackageJson } from "type-fest";
 import { __dirname } from "../constants";
-import { ensureNotCancelled, withSpinner } from "./util";
-import picocolors from "picocolors";
+import { ensureNotCancelled, tasks } from "./clack";
 
 export const defaultTsupConfig: Options = {
   entry: ["src/index.ts"],
@@ -59,15 +59,20 @@ export async function copyTemplate(
     }
   }
   if (approved) {
-    await withSpinner(
-      () =>
-        copyFile(join(__dirname, "templates", template), join(cwd(), template)),
-      undefined,
+    await tasks([
       {
-        pending: "Copying template: " + picocolors.yellow(`"${template}"`),
-        fulfilled: `Template ${picocolors.green(`"${template}"`)} copied`,
-        rejected: "Failed to copy template: " + picocolors.red(`"${template}"`),
-      }
-    );
+        title: "Copying template: " + picocolors.yellow(`"${template}"`),
+        async task() {
+          await copyFile(
+            join(__dirname, "templates", template),
+            join(cwd(), template)
+          );
+          return `Template ${picocolors.green(`"${template}"`)} copied`;
+        },
+        getError() {
+          return "Failed to copy template: " + picocolors.red(`"${template}"`);
+        },
+      },
+    ]);
   }
 }

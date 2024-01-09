@@ -3,22 +3,21 @@ import { readdir } from "fs/promises";
 import { join } from "path";
 import { cwd } from "process";
 import { promisify } from "util";
-import { intro, outro, select, spinner } from "@clack/prompts";
+import { intro, outro, select } from "@clack/prompts";
 import { Option, program } from "commander";
 import type { PackageJson } from "type-fest";
 import { object, optional, picklist, array, string, parse } from "valibot";
 import { __dirname } from "../constants";
+import { ensureNotCancelled, tasks } from "../lib/clack";
 import { deps, devDeps, processDepMap } from "../lib/deps";
 import { addEntrypoint, promptEntrypoints } from "../lib/entry-points";
 import type { SupportedManager } from "../lib/package-managers";
 import { packageManagers, supportedManagers } from "../lib/package-managers";
 import * as templates from "../lib/templates";
 import {
-  ensureNotCancelled,
   getPackageJson,
   safeAssign,
   touch,
-  withSpinner,
   writePackageJson,
 } from "../lib/util";
 
@@ -45,7 +44,6 @@ program
   .option("-e, --entry-points <entrypoints...>", "extra entry points")
   .action(async (options: unknown) => {
     intro("Project initialisation");
-    const s = spinner();
 
     const allTemplates = await readdir(join(__dirname, "templates"));
     for (const template of allTemplates) {
@@ -54,7 +52,10 @@ program
 
     await execFile("git", ["init"]);
 
-    let { packageManager, entryPoints } = parse(initOptionsSchema, options);
+    let { packageManager, entryPoints = [] } = parse(
+      initOptionsSchema,
+      options
+    );
     if (!packageManager) {
       const result = await select<
         Array<{ value: SupportedManager }>,
@@ -69,117 +70,116 @@ program
     }
     if (packageManager === "yarn") {
       await touch(join(cwd(), "yarn.lock"));
-      await withSpinner(
-        () => execFile("yarn", ["set", "version", "stable"]),
-        s,
+      await tasks([
         {
-          pending: "Setting up Yarn",
-          fulfilled: "Yarn successfully set up",
-          rejected: "Failed to setup Yarn",
-        }
-      );
+          title: "Setting up Yarn",
+          async task() {
+            await execFile("yarn", ["set", "version", "stable"]);
+            return "Yarn successfully set up";
+          },
+          getError() {
+            return "Failed to setup Yarn";
+          },
+        },
+      ]);
     }
     const commands = packageManagers[packageManager];
-    await withSpinner(
-      async () => {
-        await execFile(packageManager!, [
-          commands.init.command,
-          commands.init.args.yes,
-        ]);
-
-        const packageJson = await getPackageJson();
-
-        delete packageJson.main;
-
-        safeAssign(packageJson, {
-          version: packageJson.version ?? "1.0.0",
-          type: "module",
-          main: "./dist/index.cjs",
-          module: "./dist/index.js",
-          types: "./dist/index.d.ts",
-          exports: {
-            "./package.json": "./package.json",
-            ".": {
-              import: "./dist/index.js",
-              require: "./dist/index.cjs",
-            },
-          },
-          files: ["dist"],
-          scripts: {
-            prepare: "husky install",
-            prebuild: "yarn type",
-            build: "tsup",
-            test: "vitest",
-            lint: "eslint",
-            format: "prettier",
-            "pre-commit": "lint-staged",
-            attw: "attw",
-            publint: "publint",
-            type: "tsc",
-            prepack: "yarn publint",
-          },
-          prettier: {},
-          "lint-staged": {
-            "*.{ts,md}": "prettier --write",
-          },
-          tsup: templates.defaultTsupConfig as PackageJson[string],
-        });
-
-        await touch(join(cwd(), "src/index.ts"));
-
-        await writePackageJson(packageJson);
-      },
-      s,
+    await tasks([
       {
-        pending: "Initialising package.json",
-        fulfilled: "package.json initialised",
-        rejected: "Failed to initialise package.json",
-      }
-    );
+        title: "Initialising package.json",
+        async task() {
+          await execFile(packageManager!, [
+            commands.init.command,
+            commands.init.args.yes,
+          ]);
 
-    if (entryPoints?.length) {
-      await withSpinner(
-        async () => {
-          for (const entrypoint of entryPoints!) {
+          const packageJson = await getPackageJson();
+
+          delete packageJson.main;
+
+          safeAssign(packageJson, {
+            version: packageJson.version ?? "1.0.0",
+            type: "module",
+            main: "./dist/index.cjs",
+            module: "./dist/index.js",
+            types: "./dist/index.d.ts",
+            exports: {
+              "./package.json": "./package.json",
+              ".": {
+                import: "./dist/index.js",
+                require: "./dist/index.cjs",
+              },
+            },
+            files: ["dist"],
+            scripts: {
+              prepare: "husky install",
+              prebuild: "yarn type",
+              build: "tsup",
+              test: "vitest",
+              lint: "eslint",
+              format: "prettier",
+              "pre-commit": "lint-staged",
+              attw: "attw",
+              publint: "publint",
+              type: "tsc",
+              prepack: "yarn publint",
+            },
+            prettier: {},
+            "lint-staged": {
+              "*.{ts,md}": "prettier --write",
+            },
+            tsup: templates.defaultTsupConfig as PackageJson[string],
+          });
+
+          await touch(join(cwd(), "src/index.ts"));
+
+          await writePackageJson(packageJson);
+
+          return "package.json initialised";
+        },
+        getError() {
+          return "Failed to initialise package.json";
+        },
+      },
+      {
+        enabled: !!entryPoints.length,
+        title: `Adding entry points: ${entryPoints.join(", ")}`,
+        async task() {
+          for (const entrypoint of entryPoints) {
             await addEntrypoint(entrypoint);
           }
+          return "Entry points added";
         },
-        s,
-        {
-          pending: `Adding entry points: ${entryPoints.join(", ")}`,
-          fulfilled: "Entry points added",
-          rejected: "Failed to add entry points",
-        }
-      );
-    }
-
-    await withSpinner(
-      async () => {
-        const depsProcessed = processDepMap(deps);
-        if (depsProcessed.length) {
-          await execFile(packageManager!, [
-            commands.install.command,
-            ...depsProcessed,
-          ]);
-        }
-        const devDepsProcessed = processDepMap(devDeps);
-        if (devDepsProcessed.length) {
-          await execFile(packageManager!, [
-            commands.install.command,
-            commands.install.args.dev,
-            ...devDepsProcessed,
-          ]);
-        }
+        getError() {
+          return "Failed to add entry points";
+        },
       },
-      s,
       {
-        pending: "Installing dependencies",
-        fulfilled: "Dependencies installed",
-        rejected: "Failed to install dependencies",
-      }
-    );
+        title: "Installing dependencies",
+        async task(message) {
+          const depsProcessed = processDepMap(deps);
+          if (depsProcessed.length) {
+            await execFile(packageManager!, [
+              commands.install.command,
+              ...depsProcessed,
+            ]);
+            message("Dependencies installed");
+          }
+          const devDepsProcessed = processDepMap(devDeps);
+          if (devDepsProcessed.length) {
+            await execFile(packageManager!, [
+              commands.install.command,
+              commands.install.args.dev,
+              ...devDepsProcessed,
+            ]);
+            message("Dev dependencies installed");
+          }
+          return "All dependencies installed";
+        },
+      },
+    ]);
 
-    await promptEntrypoints(s);
+    await promptEntrypoints();
 
     outro("All set up!");
   });

@@ -5,8 +5,8 @@ import { program } from "commander";
 import picocolors from "picocolors";
 import { object, optional, boolean, parse, string, array } from "valibot";
 import { __dirname } from "../constants";
+import { ensureNotCancelled } from "../lib/clack";
 import { copyTemplate } from "../lib/templates";
-import { ensureNotCancelled } from "../lib/util";
 
 const copyTemplateOptions = object({
   yes: optional(boolean()),
