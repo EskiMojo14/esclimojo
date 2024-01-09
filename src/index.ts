@@ -26,10 +26,11 @@ import {
 import { confirm, intro, outro, select, spinner, text } from "@clack/prompts";
 import { promisify } from "util";
 import * as templates from "./templates";
-import { constants, copyFile, readdir, access, readFile } from "fs/promises";
+import { constants, copyFile, readdir, access } from "fs/promises";
 import color from "picocolors";
 import { getLogger } from "./logging";
 import { fileURLToPath } from "url";
+import arrgv from "arrgv";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -114,7 +115,7 @@ async function addEntrypoint(entrypoint: string) {
   await writePackageJson(packageJson);
 }
 
-async function promptEntrypoint(s = spinner(), proceed = false) {
+async function promptEntrypoints(s = spinner(), proceed = false) {
   if (!proceed) {
     const confirmResult = await confirm({
       message: "Do you want to add any more entry points?",
@@ -122,17 +123,27 @@ async function promptEntrypoint(s = spinner(), proceed = false) {
     ensureNotCancelled(confirmResult);
     proceed = confirmResult;
   }
+
   if (proceed) {
     const entrypoint = await text({
-      message: "What is the entry point name?",
+      message: "What are the entry point names?",
     });
     ensureNotCancelled(entrypoint);
-    await withSpinner(() => addEntrypoint(entrypoint), s, {
-      pending: `Adding entry point: ${entrypoint}`,
-      fulfilled: `Added entry point: ${entrypoint}`,
-      rejected: `Failed to add entry point: ${entrypoint}`,
-    });
-    await promptEntrypoint(s);
+    const split = arrgv(entrypoint);
+    await withSpinner(
+      async () => {
+        for (const entrypoint of split) {
+          await addEntrypoint(entrypoint);
+        }
+      },
+      s,
+      {
+        pending: `Adding entry points: ${split.join(", ")}`,
+        fulfilled: "Entry points added",
+        rejected: "Failed to add entry points",
+      }
+    );
+    await promptEntrypoints(s);
   }
 }
 
@@ -325,7 +336,7 @@ program
       );
     }
 
-    await promptEntrypoint(s);
+    await promptEntrypoints(s);
 
     outro("All set up!");
   });
@@ -353,9 +364,9 @@ program
         }
       );
 
-      await promptEntrypoint(s);
+      await promptEntrypoints(s);
     } else {
-      await promptEntrypoint(s, true);
+      await promptEntrypoints(s, true);
     }
     outro("All done!");
   });

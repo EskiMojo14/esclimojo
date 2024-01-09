@@ -976,6 +976,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"arrgv@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "arrgv@npm:1.0.2"
+  checksum: 7e6e782e6b749923ac7cbc4048ef6fe0844c4a59bfc8932fcd4c44566ba25eed46501f94dd7cf3c7297da88f3f599ca056bfb77d0c2484aebc92f04239f69124
+  languageName: node
+  linkType: hard
+
 "assertion-error@npm:^1.1.0":
   version: 1.1.0
   resolution: "assertion-error@npm:1.1.0"
@@ -1619,6 +1626,7 @@ __metadata:
     "@types/node": "npm:^20.10.7"
     "@typescript-eslint/eslint-plugin": "npm:^6.18.1"
     "@typescript-eslint/parser": "npm:^6.18.1"
+    arrgv: "npm:^1.0.2"
     commander: "npm:^11.1.0"
     eslint: "npm:^8.56.0"
     eslint-import-resolver-typescript: "npm:^3.6.1"
@@ -1633,7 +1641,7 @@ __metadata:
     valibot: "npm:^0.25.0"
     vitest: "npm:^1.1.3"
   bin:
-    esclimojo: dist/index.js
+    esclimojo: dist/index.mjs
   languageName: unknown
   linkType: soft
 
