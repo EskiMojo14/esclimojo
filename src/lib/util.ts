@@ -1,8 +1,8 @@
-import { isCancel, spinner } from "@clack/prompts";
 import type { ObjectEncodingOptions, WriteFileOptions } from "fs";
 import { mkdir, readFile, writeFile } from "fs/promises";
 import { dirname, join } from "path";
 import { cwd } from "process";
+import { isCancel, spinner } from "@clack/prompts";
 import type { PackageJson, TsConfigJson } from "type-fest";
 
 type NoInfer<T> = [T][T extends any ? 0 : never];

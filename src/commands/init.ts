@@ -1,9 +1,20 @@
 import { execFile as execFileAsync } from "child_process";
+import { constants, copyFile, readdir } from "fs/promises";
+import { join } from "path";
+import { cwd } from "process";
+import { promisify } from "util";
+import { intro, outro, select, spinner } from "@clack/prompts";
+import { Option, program } from "commander";
+import color from "picocolors";
+import type { PackageJson } from "type-fest";
 import { object, optional, picklist, array, string, parse } from "valibot";
+import { __dirname } from "../constants";
+import { deps, devDeps, processDepMap } from "../lib/deps";
+import { addEntrypoint, promptEntrypoints } from "../lib/entry-points";
+import { getLogger } from "../lib/logging";
 import type { SupportedManager } from "../lib/package-managers";
 import { packageManagers, supportedManagers } from "../lib/package-managers";
-import { Option, program } from "commander";
-import { intro, outro, select, spinner } from "@clack/prompts";
+import * as templates from "../lib/templates";
 import {
   ensureNotCancelled,
   getPackageJson,
@@ -12,17 +23,6 @@ import {
   withSpinner,
   writePackageJson,
 } from "../lib/util";
-import { constants, copyFile, readdir } from "fs/promises";
-import { join } from "path";
-import { __dirname } from "../constants";
-import { getLogger } from "../lib/logging";
-import { cwd } from "process";
-import color from "picocolors";
-import { promisify } from "util";
-import * as templates from "../lib/templates";
-import type { PackageJson } from "type-fest";
-import { deps, devDeps, processDepMap } from "../lib/deps";
-import { addEntrypoint, promptEntrypoints } from "../lib/entry-points";
 
 const execFile = promisify(execFileAsync);
 

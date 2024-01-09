@@ -1,4 +1,8 @@
 import { join } from "path";
+import { cwd } from "process";
+import { confirm, spinner, text } from "@clack/prompts";
+import arrgv from "arrgv";
+import type { Options } from "tsup";
 import { defaultTsupConfig, getEntrypointPackageJson } from "./templates";
 import {
   ensureNotCancelled,
@@ -7,10 +11,6 @@ import {
   withSpinner,
   writePackageJson,
 } from "./util";
-import { cwd } from "process";
-import type { Options } from "tsup";
-import { confirm, spinner, text } from "@clack/prompts";
-import arrgv from "arrgv";
 
 export async function addEntrypoint(entrypoint: string) {
   const packageJson = await getPackageJson();

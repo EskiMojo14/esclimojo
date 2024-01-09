@@ -1,11 +1,11 @@
-import { confirm, intro, outro } from "@clack/prompts";
-import { program } from "commander";
 import { access, constants, copyFile } from "fs/promises";
 import { join } from "path";
 import { cwd } from "process";
+import { confirm, intro, outro } from "@clack/prompts";
+import { program } from "commander";
 import { object, optional, boolean, parse, string } from "valibot";
-import { ensureNotCancelled, withSpinner } from "../lib/util";
 import { __dirname } from "../constants";
+import { ensureNotCancelled, withSpinner } from "../lib/util";
 
 const copyTemplateOptions = object({
   yes: optional(boolean()),

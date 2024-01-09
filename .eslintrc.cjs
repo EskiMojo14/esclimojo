@@ -33,6 +33,16 @@ module.exports = {
         message: "Unavailable in ESM, import from constants",
       },
     ],
+    "import/order": [
+      "error",
+      {
+        alphabetize: {
+          order: "asc",
+          orderImportKind: "asc",
+          caseInsensitive: true,
+        },
+      },
+    ],
   },
   overrides: [
     {

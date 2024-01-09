@@ -1,8 +1,8 @@
 import { intro, outro, spinner } from "@clack/prompts";
 import { program } from "commander";
 import { array, optional, parse, string } from "valibot";
-import { withSpinner } from "../lib/util";
 import { addEntrypoint, promptEntrypoints } from "../lib/entry-points";
+import { withSpinner } from "../lib/util";
 
 program
   .command("add-entrypoints")

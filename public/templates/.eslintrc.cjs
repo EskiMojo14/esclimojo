@@ -26,6 +26,16 @@ module.exports = {
       { fixStyle: "separate-type-imports" },
     ],
     "@typescript-eslint/array-type": ["error", { default: "generic" }],
+    "import/order": [
+      "error",
+      {
+        alphabetize: {
+          order: "asc",
+          orderImportKind: "asc",
+          caseInsensitive: true,
+        },
+      },
+    ],
   },
   overrides: [
     {
