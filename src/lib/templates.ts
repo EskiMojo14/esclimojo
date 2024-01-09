@@ -6,6 +6,7 @@ import type { Options } from "tsup";
 import type { PackageJson } from "type-fest";
 import { __dirname } from "../constants";
 import { ensureNotCancelled, withSpinner } from "./util";
+import picocolors from "picocolors";
 
 export const defaultTsupConfig: Options = {
   entry: ["src/index.ts"],
@@ -63,9 +64,9 @@ export async function copyTemplate(
         copyFile(join(__dirname, "templates", template), join(cwd(), template)),
       undefined,
       {
-        pending: `Copying template: ${template}`,
-        fulfilled: `Template ${template} copied`,
-        rejected: `Failed to copy template: ${template}`,
+        pending: "Copying template: " + picocolors.yellow(`"${template}"`),
+        fulfilled: `Template ${picocolors.green(`"${template}"`)} copied`,
+        rejected: "Failed to copy template: " + picocolors.red(`"${template}"`),
       }
     );
   }

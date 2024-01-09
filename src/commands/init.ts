@@ -10,7 +10,6 @@ import { object, optional, picklist, array, string, parse } from "valibot";
 import { __dirname } from "../constants";
 import { deps, devDeps, processDepMap } from "../lib/deps";
 import { addEntrypoint, promptEntrypoints } from "../lib/entry-points";
-import { getLogger } from "../lib/logging";
 import type { SupportedManager } from "../lib/package-managers";
 import { packageManagers, supportedManagers } from "../lib/package-managers";
 import * as templates from "../lib/templates";

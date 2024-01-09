@@ -1,11 +1,10 @@
 import { readdir } from "fs/promises";
 import { join } from "path";
-import { intro, multiselect, outro } from "@clack/prompts";
+import { intro, log, multiselect, outro } from "@clack/prompts";
 import { program } from "commander";
 import picocolors from "picocolors";
 import { object, optional, boolean, parse, string, array } from "valibot";
 import { __dirname } from "../constants";
-import { getLogger } from "../lib/logging";
 import { copyTemplate } from "../lib/templates";
 import { ensureNotCancelled } from "../lib/util";
 
@@ -32,21 +31,18 @@ program
       filenames = selected;
     }
 
-    const logger = getLogger();
     let i = filenames.length;
     while (i--) {
       const name = filenames[i] ?? "";
       const valid = templates.includes(name);
       if (!valid) {
-        logger.log(
-          picocolors.gray(
-            `"${name}" is not a valid template and will be ignored`
-          )
+        log.info(
+          picocolors.red(`"${name}"`) +
+            ` is not a valid template and will be ignored`
         );
         filenames.splice(i, 1);
       }
     }
-    logger.close();
 
     for (const template of filenames) {
       await copyTemplate(template, yes);
