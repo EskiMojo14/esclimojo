@@ -2,7 +2,7 @@
   "name": "esclimojo",
   "version": "1.0.0",
   "description": "a cli",
-  "bin": "dist/index.js",
+  "bin": "dist/index.mjs",
   "scripts": {
     "prepare": "husky install",
     "prebuild": "yarn type",
@@ -52,9 +52,8 @@
       "src/index.ts"
     ],
     "format": [
-      "cjs"
+      "esm"
     ],
-    "minify": true,
     "sourcemap": true,
     "publicDir": true
   }

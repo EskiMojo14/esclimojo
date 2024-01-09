@@ -62,6 +62,7 @@ export async function withSpinner<T>(
     return r;
   } catch (e) {
     s.stop(messages.rejected);
+    console.error(e);
     throw e;
   }
 }

@@ -5,7 +5,7 @@ import { name, version, description } from "../package.json";
 import { array, object, optional, parse, picklist, string } from "valibot";
 import type { PackageJson } from "type-fest";
 import { cwd } from "process";
-import { join } from "path";
+import { dirname, join } from "path";
 import type { Options } from "tsup";
 import {
   ensureNotCancelled,
@@ -15,10 +15,15 @@ import {
   withSpinner,
   writePackageJson,
 } from "./util";
-import { confirm, select, spinner, text } from "@clack/prompts";
+import { confirm, intro, outro, select, spinner, text } from "@clack/prompts";
 import { promisify } from "util";
 import * as templates from "./templates";
-import { copyFile, readdir } from "fs/promises";
+import { constants, copyFile, readdir } from "fs/promises";
+import color from "picocolors";
+import { S_BAR } from "./logging";
+import { fileURLToPath } from "url";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const execFile = promisify(childProcess.execFile);
 
@@ -164,14 +169,41 @@ program
   )
   .option("-e, --entry-points <entrypoints...>", "extra entry points")
   .action(async (options: unknown) => {
-    const templates = await readdir(join(__dirname, "templates"));
-    for (const template of templates) {
-      await copyFile(
-        join(__dirname, "templates", template),
-        join(cwd(), template)
-      );
-    }
+    intro("Project initialisation");
     const s = spinner();
+
+    await withSpinner(
+      async () => {
+        const templates = await readdir(join(__dirname, "templates"));
+        let logged = false;
+        for (const template of templates) {
+          try {
+            await copyFile(
+              join(__dirname, "templates", template),
+              join(cwd(), template),
+              constants.COPYFILE_EXCL
+            );
+          } catch {
+            logged = true;
+            process.stdout.write(
+              color.gray(
+                `${S_BAR}  ${template} already exists, skipping template\n`
+              )
+            );
+          }
+        }
+        if (logged) {
+          process.stdout.write(color.gray(S_BAR) + "\n");
+        }
+      },
+      s,
+      {
+        pending: "Copying templates",
+        fulfilled: "Templates copied",
+        rejected: "Failed to copy templates",
+      }
+    );
+
     await execFile("git", ["init"]);
 
     let { packageManager, entryPoints } = parse(initOptionsSchema, options);
@@ -289,12 +321,15 @@ program
     }
 
     await promptEntrypoint(s);
+
+    outro("All set up!");
   });
 
 program
   .command("add-entrypoints")
   .argument("[entrypoints...]")
   .action(async (args: unknown) => {
+    intro("Add entry points");
     const s = spinner();
     const entryPoints = parse(initOptionsSchema.entries.entryPoints, args);
 
@@ -317,6 +352,7 @@ program
     } else {
       await promptEntrypoint(s, true);
     }
+    outro("All done!");
   });
 
 program.parse();
