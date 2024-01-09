@@ -5,7 +5,7 @@ import { name, version, description } from "../package.json";
 import { array, object, optional, parse, picklist, string } from "valibot";
 import type { PackageJson } from "type-fest";
 import { cwd } from "process";
-import { basename, dirname, join } from "path";
+import { join } from "path";
 import type { Options } from "tsup";
 import {
   ensureNotCancelled,
