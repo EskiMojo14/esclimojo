@@ -1,3 +1,8 @@
+interface CommandMap {
+  init: ["yes"];
+  install: ["dev"];
+}
+
 export const packageManagers = {
   yarn: {
     init: {
@@ -27,7 +32,15 @@ export const packageManagers = {
       },
     },
   },
-};
+} satisfies Record<
+  string,
+  {
+    [Command in keyof CommandMap]: {
+      command: string;
+      args: Record<CommandMap[Command][number], string>;
+    };
+  }
+>;
 
 export type SupportedManager = keyof typeof packageManagers;
 
