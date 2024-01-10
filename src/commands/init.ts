@@ -14,7 +14,11 @@ import { deps, devDeps, processDepMap } from "../lib/deps";
 import { addEntrypoint, promptEntrypoints } from "../lib/entry-points";
 import { getPackageJson, isFile, touch, writePackageJson } from "../lib/fs";
 import type { SupportedManager } from "../lib/package-managers";
-import { packageManagers, supportedManagers } from "../lib/package-managers";
+import {
+  initLifecycles,
+  packageManagers,
+  supportedManagers,
+} from "../lib/package-managers";
 import * as templates from "../lib/templates";
 import { safeAssign } from "../lib/util";
 
@@ -80,22 +84,9 @@ program
     for (const pmTemplate of pmTemplates) {
       await templates.copyTemplate(pmTemplate, undefined, packageManager);
     }
+    const lifecycles = initLifecycles[packageManager];
 
-    if (packageManager === "yarn") {
-      await touch(join(cwd(), "yarn.lock"));
-      await tasks([
-        {
-          title: "Setting up Yarn",
-          async task() {
-            await execFile("yarn", ["set", "version", "stable"]);
-            return "Yarn successfully set up";
-          },
-          getError() {
-            return "Failed to setup Yarn";
-          },
-        },
-      ]);
-    }
+    await lifecycles?.preinit?.();
     const commands = packageManagers[packageManager];
     await tasks([
       {
@@ -147,6 +138,8 @@ program
           await touch(join(cwd(), "src/index.ts"));
 
           await writePackageJson(packageJson);
+
+          await lifecycles?.postinit?.();
 
           return "package.json initialised";
         },
