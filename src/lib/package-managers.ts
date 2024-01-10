@@ -32,6 +32,20 @@ export const packageManagers = {
       },
     },
   },
+  bun: {
+    init: {
+      command: "init",
+      args: {
+        yes: "-y",
+      },
+    },
+    install: {
+      command: "install",
+      args: {
+        dev: "-D",
+      },
+    },
+  },
 } satisfies Record<
   string,
   {
