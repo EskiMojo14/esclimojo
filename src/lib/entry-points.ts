@@ -58,19 +58,18 @@ export async function promptEntrypoints(proceed = false) {
     });
     ensureNotCancelled(entrypoint);
     const split = arrgv(entrypoint);
-    await tasks([
-      {
-        title: `Adding entry points: ${split.join(", ")}`,
+    await tasks(
+      split.map((entrypoint) => ({
+        title: `Adding entry point: ${entrypoint}`,
         async task() {
-          for (const entrypoint of split) {
-            await addEntrypoint(entrypoint);
-          }
+          await addEntrypoint(entrypoint);
+          return `Added entry point: ${entrypoint}`;
         },
         getError() {
-          return "Failed to add entry points";
+          return `Failed to add entry point:  ${entrypoint}`;
         },
-      },
-    ]);
+      }))
+    );
     await promptEntrypoints();
   }
 }

@@ -12,20 +12,18 @@ program
     const entryPoints = parse(optional(array(string())), args);
 
     if (entryPoints?.length) {
-      await tasks([
-        {
-          title: `Adding entry points: ${entryPoints.join(", ")}`,
+      await tasks(
+        entryPoints.map((entrypoint) => ({
+          title: `Adding entry point: ${entrypoint}`,
           async task() {
-            for (const entrypoint of entryPoints) {
-              await addEntrypoint(entrypoint);
-            }
-            return "Entry points added";
+            await addEntrypoint(entrypoint);
+            return `Added entry point: ${entrypoint}`;
           },
           getError() {
-            return "Failed to add entry points";
+            return `Failed to add entry point:  ${entrypoint}`;
           },
-        },
-      ]);
+        }))
+      );
 
       await promptEntrypoints();
     } else {
