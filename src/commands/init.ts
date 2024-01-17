@@ -117,7 +117,7 @@ program
             files: ["dist"],
             scripts: {
               prepare: "husky install",
-              prebuild: "yarn type",
+              prebuild: `${packageManager} ${commands.run.command} type`,
               build: "tsup",
               test: "vitest",
               lint: "eslint",
@@ -126,7 +126,7 @@ program
               attw: "attw",
               publint: "publint",
               type: "tsc",
-              prepack: "yarn publint",
+              prepack: `${packageManager} ${commands.run.command} publint`,
             },
             prettier: {},
             "lint-staged": {

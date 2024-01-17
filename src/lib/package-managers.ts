@@ -10,6 +10,7 @@ import { touch } from "./fs";
 interface CommandMap {
   init: ["yes"];
   install: ["dev"];
+  run: [];
 }
 
 export const packageManagers = {
@@ -26,6 +27,10 @@ export const packageManagers = {
         dev: "-D",
       },
     },
+    run: {
+      command: "run",
+      args: {},
+    },
   },
   npm: {
     init: {
@@ -40,6 +45,10 @@ export const packageManagers = {
         dev: "-D",
       },
     },
+    run: {
+      command: "run",
+      args: {},
+    },
   },
   bun: {
     init: {
@@ -53,6 +62,10 @@ export const packageManagers = {
       args: {
         dev: "-D",
       },
+    },
+    run: {
+      command: "run",
+      args: {},
     },
   },
 } satisfies Record<
