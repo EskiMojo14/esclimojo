@@ -165,7 +165,7 @@ program
         async task(message) {
           const depsProcessed = processDepMap(deps);
           if (depsProcessed.length) {
-            await execFile(packageManager!, [
+            await execFile(packageManager, [
               commands.install.command,
               ...depsProcessed,
             ]);
@@ -173,7 +173,7 @@ program
           }
           const devDepsProcessed = processDepMap(devDeps);
           if (devDepsProcessed.length) {
-            await execFile(packageManager!, [
+            await execFile(packageManager, [
               commands.install.command,
               commands.install.args.dev,
               ...devDepsProcessed,
