@@ -4,7 +4,7 @@ export const devDeps: DependencyMap = {
   "@arethetypeswrong/cli": true,
   "@typescript-eslint/eslint-plugin": true,
   "@typescript-eslint/parser": true,
-  eslint: true,
+  eslint: "^8",
   "eslint-import-resolver-typescript": true,
   "eslint-plugin-import": true,
   "eslint-plugin-vitest": true,
