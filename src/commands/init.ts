@@ -116,7 +116,7 @@ program
             },
             files: ["dist"],
             scripts: {
-              prepare: "husky install",
+              prepare: "husky",
               prebuild: `${packageManager} ${commands.run.command} type`,
               build: "tsup",
               test: "vitest",
