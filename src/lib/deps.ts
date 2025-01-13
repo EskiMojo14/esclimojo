@@ -2,18 +2,20 @@ type DependencyMap = Record<string, true | string>;
 
 export const devDeps: DependencyMap = {
   "@arethetypeswrong/cli": true,
-  "@typescript-eslint/eslint-plugin": true,
-  "@typescript-eslint/parser": true,
-  eslint: "^8",
+  eslint: true,
+  "@eslint/js": true,
   "eslint-import-resolver-typescript": true,
-  "eslint-plugin-import": true,
+  "eslint-plugin-import-x": true,
   "eslint-plugin-vitest": true,
+  globals: true,
   husky: true,
+  jiti: true,
   "lint-staged": true,
   prettier: true,
   publint: true,
   tsup: true,
   typescript: true,
+  "typescript-eslint": true,
   vitest: true,
 };
 

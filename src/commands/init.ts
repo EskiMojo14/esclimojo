@@ -55,10 +55,11 @@ program
 
     await execFile("git", ["init"]);
 
-    let { packageManager, entryPoints = [] } = parse(
+    const { packageManager: pm, entryPoints = [] } = parse(
       initOptionsSchema,
       options
     );
+    let packageManager = pm;
     if (!packageManager) {
       const result = await select<SupportedManager>({
         message: "Choose a package manager",

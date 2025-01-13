@@ -75,7 +75,7 @@ program
       processed = filenames.map((filename) => {
         const [first, second] = filename.split(":");
         if (second) {
-          if (!supportedManagers.includes(first as SupportedManager))
+          if (!supportedManagers.includes(first ?? ""))
             throw new Error(
               "Unsupported package manager: " + picocolors.red(first)
             );
