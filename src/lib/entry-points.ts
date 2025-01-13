@@ -1,5 +1,5 @@
-import { join } from "path";
-import { cwd } from "process";
+import { join } from "node:path";
+import { cwd } from "node:process";
 import { confirm, text } from "@clack/prompts";
 import arrgv from "arrgv";
 import type { Options } from "tsup";

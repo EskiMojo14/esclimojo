@@ -1,8 +1,8 @@
-import { execFile as execFileAsync } from "child_process";
-import { readdir } from "fs/promises";
-import { join } from "path";
-import { cwd } from "process";
-import { promisify } from "util";
+import { execFile as execFileAsync } from "node:child_process";
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
+import { cwd } from "node:process";
+import { promisify } from "node:util";
 import { intro, log, outro, select } from "@clack/prompts";
 import { Option, program } from "commander";
 import picocolors from "picocolors";

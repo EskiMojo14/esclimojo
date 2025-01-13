@@ -1,6 +1,6 @@
-import { access, constants, copyFile } from "fs/promises";
-import { join } from "path";
-import { cwd } from "process";
+import { access, constants, copyFile } from "node:fs/promises";
+import { join } from "node:path";
+import { cwd } from "node:process";
 import { confirm } from "@clack/prompts";
 import picocolors from "picocolors";
 import type { Options } from "tsup";

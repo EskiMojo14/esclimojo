@@ -1,5 +1,5 @@
-import { readdir } from "fs/promises";
-import { join } from "path";
+import { readdir } from "node:fs/promises";
+import { join } from "node:path";
 import { intro, log, multiselect, outro } from "@clack/prompts";
 import { program } from "commander";
 import picocolors from "picocolors";

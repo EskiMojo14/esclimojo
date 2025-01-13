@@ -2,10 +2,10 @@ import {
   lstatSync,
   type ObjectEncodingOptions,
   type WriteFileOptions,
-} from "fs";
-import { mkdir, readFile, writeFile } from "fs/promises";
-import { dirname, join } from "path";
-import { cwd } from "process";
+} from "node:fs";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { cwd } from "node:process";
 import type { PackageJson, TsConfigJson } from "type-fest";
 
 export async function touch(
