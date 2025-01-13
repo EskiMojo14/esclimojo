@@ -961,7 +961,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typescript-eslint/parser@npm:8.19.1":
+"@typescript-eslint/parser@npm:8.19.1, @typescript-eslint/parser@npm:^8.19.1":
   version: 8.19.1
   resolution: "@typescript-eslint/parser@npm:8.19.1"
   dependencies:
@@ -2004,6 +2004,7 @@ __metadata:
     "@eslint/js": "npm:^9.18.0"
     "@total-typescript/ts-reset": "npm:^0.6.1"
     "@types/node": "npm:^22"
+    "@typescript-eslint/parser": "npm:^8.19.1"
     arrgv: "npm:^1.0.2"
     commander: "npm:^13.0.0"
     eslint: "npm:^9.18.0"
