@@ -60,10 +60,7 @@ program
       options
     );
     if (!packageManager) {
-      const result = await select<
-        Array<{ value: SupportedManager }>,
-        SupportedManager
-      >({
+      const result = await select<SupportedManager>({
         message: "Choose a package manager",
         initialValue: "yarn",
         options: supportedManagers.map((value) => ({ value })),

@@ -58,10 +58,7 @@ program
 
     let processed: Array<TemplateDesc> = [];
     if (!filenames?.length) {
-      const selected = await multiselect<
-        Array<{ value: TemplateDesc; label: string; hint?: string }>,
-        TemplateDesc
-      >({
+      const selected = await multiselect({
         message: "Which templates should be copied?",
         options: templates.map((desc) => ({
           value: desc,
