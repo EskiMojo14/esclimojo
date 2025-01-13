@@ -89,7 +89,7 @@ program
       {
         title: "Initialising package.json",
         async task() {
-          await execFile(packageManager!, [
+          await execFile(packageManager, [
             commands.init.command,
             commands.init.args.yes,
           ]);
