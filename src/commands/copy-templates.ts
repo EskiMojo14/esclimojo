@@ -9,6 +9,7 @@ import { ensureNotCancelled } from "../lib/clack";
 import type { SupportedManager } from "../lib/package-managers";
 import { supportedManagers } from "../lib/package-managers";
 import { copyTemplate } from "../lib/templates";
+import { includes } from "../lib/util";
 
 interface TemplateDesc {
   filename: string;
@@ -75,13 +76,13 @@ program
       processed = filenames.map((filename) => {
         const [first, second] = filename.split(":");
         if (second) {
-          if (!supportedManagers.includes(first ?? ""))
+          if (!includes(supportedManagers, first))
             throw new Error(
               "Unsupported package manager: " + picocolors.red(first)
             );
           return {
             filename: second,
-            packageManager: first as SupportedManager,
+            packageManager: first,
           };
         } else {
           return { filename };
