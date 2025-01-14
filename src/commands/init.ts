@@ -6,7 +6,6 @@ import { promisify } from "node:util";
 import { intro, log, outro, select } from "@clack/prompts";
 import { Option, program } from "commander";
 import picocolors from "picocolors";
-import type { PackageJson } from "type-fest";
 import { object, optional, picklist, array, string, parse } from "valibot";
 import { __dirname } from "../constants";
 import { ensureNotCancelled, tasks } from "../lib/clack";
@@ -130,7 +129,7 @@ program
             "lint-staged": {
               "*.{ts,md}": "prettier --write",
             },
-            tsup: templates.defaultTsupConfig as PackageJson[string],
+            tsup: templates.defaultTsupConfig,
           });
 
           await touch(join(cwd(), "src/index.ts"));

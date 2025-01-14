@@ -10,13 +10,13 @@ import { ensureNotCancelled, tasks } from "./clack";
 import { touch } from "./fs";
 import type { SupportedManager } from "./package-managers";
 
-export const defaultTsupConfig: Options = {
+export const defaultTsupConfig = {
   entry: ["src/index.ts"],
   sourcemap: true,
   format: ["esm", "cjs"],
   dts: true,
   minify: true,
-};
+} satisfies Options;
 
 /**
  * Generate the individual package.json files used
