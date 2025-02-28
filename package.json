@@ -5,14 +5,14 @@
   "bin": "dist/index.mjs",
   "scripts": {
     "prepare": "husky install",
-    "prebuild": "yarn type",
+    "prebuild": "pnpm type",
     "build": "tsup-node",
     "test": "vitest",
     "lint": "eslint",
     "pre-commit": "lint-staged",
     "publint": "publint",
     "type": "tsc",
-    "prepack": "yarn publint"
+    "prepack": "pnpm publint"
   },
   "devDependencies": {
     "@arethetypeswrong/cli": "^0.17.3",
@@ -49,7 +49,7 @@
   "engines": {
     "node": "^14.15.0 || ^16.10.0 || >=18.0.0"
   },
-  "packageManager": "yarn@4.0.2",
+  "packageManager": "pnpm@10.5.2+sha256.79a98daa90248b50815e31460790f118c56fe099113370826caa0153be6daba5",
   "lint-staged": {
     "*.{ts,md}": "prettier --write"
   },

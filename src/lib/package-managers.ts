@@ -50,6 +50,24 @@ export const packageManagers = {
       args: {},
     },
   },
+  pnpm: {
+    init: {
+      command: "init",
+      args: {
+        yes: "-y",
+      },
+    },
+    install: {
+      command: "add",
+      args: {
+        dev: "-D",
+      },
+    },
+    run: {
+      command: "run",
+      args: {},
+    },
+  },
   bun: {
     init: {
       command: "init",

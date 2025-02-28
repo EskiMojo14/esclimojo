@@ -62,7 +62,7 @@ program
     if (!packageManager) {
       const result = await select<SupportedManager>({
         message: "Choose a package manager",
-        initialValue: "yarn",
+        initialValue: "pnpm",
         options: supportedManagers.map((value) => ({ value })),
       });
       ensureNotCancelled(result);
