@@ -4,7 +4,7 @@
   "description": "a cli",
   "bin": "dist/index.mjs",
   "scripts": {
-    "prepare": "husky install",
+    "prepare": "husky",
     "prebuild": "pnpm type",
     "build": "tsup-node",
     "test": "vitest",
