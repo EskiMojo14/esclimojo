@@ -15,7 +15,6 @@ export const defaultTsupConfig = {
   sourcemap: true,
   format: ["esm", "cjs"],
   dts: true,
-  minify: true,
 } satisfies Options;
 
 /**
