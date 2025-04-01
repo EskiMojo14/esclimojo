@@ -89,10 +89,10 @@ program
       {
         title: "Initialising package.json",
         async task() {
-          await execFile(packageManager, [
-            commands.init.command,
-            commands.init.args.yes,
-          ]);
+          await execFile(
+            packageManager,
+            [commands.init.command, commands.init.args.yes].filter(Boolean)
+          );
 
           const packageJson = await getPackageJson();
 

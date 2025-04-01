@@ -54,7 +54,7 @@ export const packageManagers = {
     init: {
       command: "init",
       args: {
-        yes: "-y",
+        yes: "",
       },
     },
     install: {
