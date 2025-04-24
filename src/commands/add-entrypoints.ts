@@ -1,6 +1,6 @@
 import { intro, outro } from "@clack/prompts";
 import { program } from "commander";
-import { array, optional, parse, string } from "valibot";
+import * as v from "valibot";
 import { tasks } from "../lib/clack";
 import { addEntrypoint, promptEntrypoints } from "../lib/entry-points";
 
@@ -9,7 +9,7 @@ program
   .argument("[entrypoints...]")
   .action(async (args: unknown) => {
     intro("Add entry points");
-    const entryPoints = parse(optional(array(string())), args);
+    const entryPoints = v.parse(v.optional(v.array(v.string())), args);
 
     if (entryPoints?.length) {
       await tasks(

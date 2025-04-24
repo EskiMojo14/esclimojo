@@ -6,7 +6,7 @@ import { promisify } from "node:util";
 import { intro, log, outro, select } from "@clack/prompts";
 import { Option, program } from "commander";
 import picocolors from "picocolors";
-import { object, optional, picklist, array, string, parse } from "valibot";
+import * as v from "valibot";
 import { __dirname } from "../constants";
 import { ensureNotCancelled, tasks } from "../lib/clack";
 import { deps, devDeps, processDepMap } from "../lib/deps";
@@ -23,14 +23,14 @@ import { safeAssign } from "../lib/util";
 
 const execFile = promisify(execFileAsync);
 
-const initOptionsSchema = object({
-  packageManager: optional(
-    picklist(
+const initOptionsSchema = v.object({
+  packageManager: v.optional(
+    v.picklist(
       supportedManagers,
       `Must be one of supported: ${Object.keys(packageManagers).join(", ")}`
     )
   ),
-  entryPoints: optional(array(string())),
+  entryPoints: v.optional(v.array(v.string())),
 });
 
 program
@@ -54,7 +54,7 @@ program
 
     await execFile("git", ["init"]);
 
-    const { packageManager: pm, entryPoints = [] } = parse(
+    const { packageManager: pm, entryPoints = [] } = v.parse(
       initOptionsSchema,
       options
     );

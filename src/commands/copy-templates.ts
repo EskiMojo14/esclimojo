@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { intro, log, multiselect, outro } from "@clack/prompts";
 import { program } from "commander";
 import picocolors from "picocolors";
-import { object, optional, boolean, parse, string, array } from "valibot";
+import * as v from "valibot";
 import { __dirname } from "../constants";
 import { ensureNotCancelled } from "../lib/clack";
 import type { SupportedManager } from "../lib/package-managers";
@@ -16,8 +16,8 @@ interface TemplateDesc {
   packageManager?: SupportedManager;
 }
 
-const copyTemplateOptions = object({
-  yes: optional(boolean()),
+const copyTemplateOptions = v.object({
+  yes: v.optional(v.boolean()),
 });
 
 program
@@ -54,8 +54,8 @@ program
         // no specific templates
       }
     }
-    const filenames = parse(optional(array(string())), files);
-    const { yes } = parse(copyTemplateOptions, options);
+    const filenames = v.parse(v.optional(v.array(v.string())), files);
+    const { yes } = v.parse(copyTemplateOptions, options);
 
     let processed: Array<TemplateDesc> = [];
     if (!filenames?.length) {
