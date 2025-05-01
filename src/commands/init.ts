@@ -115,7 +115,7 @@ program
             scripts: {
               prepare: "husky",
               prebuild: `${packageManager} ${commands.run.command} type`,
-              build: "tsup",
+              build: "tsdown",
               test: "vitest",
               lint: "eslint",
               format: "prettier",
@@ -129,7 +129,7 @@ program
             "lint-staged": {
               "*.{ts,md}": "prettier --write",
             },
-            tsup: templates.defaultTsupConfig,
+            tsdown: templates.defaultTsdownConfig,
           });
 
           await touch(join(cwd(), "src/index.ts"));

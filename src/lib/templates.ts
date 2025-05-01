@@ -3,14 +3,14 @@ import { join } from "node:path";
 import { cwd } from "node:process";
 import { confirm } from "@clack/prompts";
 import picocolors from "picocolors";
-import type { Options } from "tsup";
+import type { Options } from "tsdown";
 import type { PackageJson } from "type-fest";
 import { __dirname } from "../constants";
 import { ensureNotCancelled, tasks } from "./clack";
 import { touch } from "./fs";
 import type { SupportedManager } from "./package-managers";
 
-export const defaultTsupConfig = {
+export const defaultTsdownConfig = {
   entry: ["src/index.ts"],
   sourcemap: true,
   format: ["esm", "cjs"],

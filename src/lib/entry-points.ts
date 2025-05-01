@@ -2,10 +2,10 @@ import { join } from "node:path";
 import { cwd } from "node:process";
 import { confirm, text } from "@clack/prompts";
 import arrgv from "arrgv";
-import type { Options } from "tsup";
+import type { Options } from "tsdown";
 import { ensureNotCancelled, tasks } from "./clack";
 import { getPackageJson, touch, writePackageJson } from "./fs";
-import { defaultTsupConfig, getEntrypointPackageJson } from "./templates";
+import { defaultTsdownConfig, getEntrypointPackageJson } from "./templates";
 
 export async function addEntrypoint(entrypoint: string) {
   const packageJson = await getPackageJson();
@@ -21,15 +21,15 @@ export async function addEntrypoint(entrypoint: string) {
     require: `./dist/${entrypoint}.cjs`,
   };
 
-  const tsupConfig = ((packageJson.tsup as Options | undefined) ??=
-    defaultTsupConfig);
+  const tsdownConfig = ((packageJson.tsdown as Options | undefined) ??=
+    defaultTsdownConfig);
 
   (packageJson.files ??= []).push(entrypoint);
-  const entry = (tsupConfig.entry ??= []);
+  const entry = (tsdownConfig.entry ??= []);
   const entryPath = `src/${entrypoint}.ts`;
   if (Array.isArray(entry)) {
     entry.push(entryPath);
-  } else {
+  } else if (typeof entry === "object") {
     entry[entrypoint] = entryPath;
   }
 

@@ -14,7 +14,7 @@ export const devDeps: DependencyMap = {
   "lint-staged": true,
   prettier: true,
   publint: true,
-  tsup: true,
+  tsdown: true,
   typescript: true,
   "typescript-eslint": true,
   vitest: true,
