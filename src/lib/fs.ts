@@ -6,7 +6,7 @@ import {
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { cwd } from "node:process";
-import type { PackageJson, TsConfigJson } from "type-fest";
+import type { PackageJson } from "type-fest";
 
 export async function touch(
   filepath: string,
@@ -26,19 +26,6 @@ export async function getPackageJson(dir = cwd()) {
 export async function writePackageJson(contents: PackageJson, dir = cwd()) {
   return touch(
     join(dir, "package.json"),
-    JSON.stringify(contents, undefined, 2)
-  );
-}
-
-export async function getTsconfig(dir = cwd()) {
-  return JSON.parse(
-    await readFile(join(dir, "tsconfig.json"), { encoding: "utf-8" })
-  ) as TsConfigJson;
-}
-
-export async function writeTsconfig(contents: TsConfigJson, dir = cwd()) {
-  return touch(
-    join(dir, "tsconfig.json"),
     JSON.stringify(contents, undefined, 2)
   );
 }
