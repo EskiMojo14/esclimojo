@@ -3,6 +3,7 @@ type DependencyMap = Record<string, true | string>;
 export const devDeps: DependencyMap = {
   "@arethetypeswrong/cli": true,
   "@typescript-eslint/parser": true,
+  "@vitest/browser-playwright": true,
   eslint: true,
   "@eslint/js": true,
   "eslint-import-resolver-typescript": true,
