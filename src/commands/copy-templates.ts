@@ -1,6 +1,6 @@
 import { readdir } from "node:fs/promises";
 import { join } from "node:path";
-import { intro, log, multiselect, outro } from "@clack/prompts";
+import { confirm, intro, log, multiselect, outro } from "@clack/prompts";
 import { program } from "commander";
 import picocolors from "picocolors";
 import * as v from "valibot";
@@ -18,11 +18,13 @@ interface TemplateDesc {
 
 const copyTemplateOptions = v.object({
   yes: v.optional(v.boolean()),
+  react: v.optional(v.boolean()),
 });
 
 program
   .command("copy-templates")
   .option("-y, --yes", "override existing file without asking")
+  .option("-r, --react", "include react specific code")
   .argument(
     "[filenames...]",
     "file paths - package specific templates need to be prefixed e.g. yarn:.yarnrc.yml"
@@ -55,7 +57,16 @@ program
       }
     }
     const filenames = v.parse(v.optional(v.array(v.string())), files);
-    const { yes } = v.parse(copyTemplateOptions, options);
+    const parsedOptions = v.parse(copyTemplateOptions, options);
+    const { yes } = parsedOptions;
+    let { react } = parsedOptions;
+    if (react === undefined) {
+      const result = await confirm({
+        message: "Include React code?",
+      });
+      ensureNotCancelled(result);
+      react = result;
+    }
 
     let processed: Array<TemplateDesc> = [];
     if (!filenames?.length) {
@@ -116,7 +127,11 @@ program
     }
 
     for (const template of final) {
-      await copyTemplate(template.filename, yes, template.packageManager);
+      await copyTemplate(template.filename, {
+        promptBeforeOverwrite: !yes,
+        react,
+        packageManager: template.packageManager,
+      });
     }
 
     outro("Done");

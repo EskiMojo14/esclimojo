@@ -1,4 +1,4 @@
-import { access, constants, copyFile } from "node:fs/promises";
+import { access, constants, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { cwd } from "node:process";
 import { confirm } from "@clack/prompts";
@@ -36,10 +36,35 @@ export function getEntrypointPackageJson(
   };
 }
 
+interface CopyTemplateOptions {
+  promptBeforeOverwrite?: boolean;
+  react?: boolean;
+  packageManager?: SupportedManager;
+}
+
+function removeBlock(content: string, block: string, strip: boolean): string {
+  // happy path
+  if (!content.includes(`/* ${block}:start`)) return content;
+
+  const start = `\\n\\s*\\/\\* ${block}:start`;
+  const end = `\\n\\s*${block}:end \\*\\/`;
+  return content.replace(
+    strip
+      ? // remove the entire block
+        new RegExp(start + ".*?" + end, "gs")
+      : // uncomment the block
+        new RegExp(start + "|" + end, "g"),
+    ""
+  );
+}
+
 export async function copyTemplate(
   template: string,
-  promptBeforeOverwrite = true,
-  packageManager?: SupportedManager
+  {
+    promptBeforeOverwrite = true,
+    react = false,
+    packageManager,
+  }: CopyTemplateOptions = {}
 ) {
   let approved = !promptBeforeOverwrite;
   if (!approved) {
@@ -73,15 +98,18 @@ export async function copyTemplate(
           const source = packageManager
             ? join(__dirname, "pm-templates", packageManager, template)
             : join(__dirname, "templates", template);
-          const dest = join(cwd(), template);
-          // touch first to ensure dir exists
-          await touch(dest);
-          await copyFile(source, dest);
+          const contents = await readFile(source, { encoding: "utf-8" });
+
+          await touch(
+            join(cwd(), template),
+            removeBlock(contents, "react", !react)
+          );
           return `${
             templateType ? templateType + "t" : "T"
           }emplate ${picocolors.green(`"${template}"`)} copied`;
         },
-        getError() {
+        getError(e) {
+          console.error(e);
           return (
             `Failed to copy ${templateType}template: ` +
             picocolors.red(`"${template}"`)

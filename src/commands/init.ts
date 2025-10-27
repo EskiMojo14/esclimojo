@@ -3,13 +3,13 @@ import { readdir } from "node:fs/promises";
 import { join } from "node:path";
 import { cwd } from "node:process";
 import { promisify } from "node:util";
-import { intro, log, outro, select } from "@clack/prompts";
+import { confirm, intro, log, outro, select } from "@clack/prompts";
 import { Option, program } from "commander";
 import picocolors from "picocolors";
 import * as v from "valibot";
 import { __dirname } from "../constants";
 import { ensureNotCancelled, tasks } from "../lib/clack";
-import { deps, devDeps, processDepMap } from "../lib/deps";
+import { deps, devDeps, processDepMap, reactDevDeps } from "../lib/deps";
 import { addEntrypoint, promptEntrypoints } from "../lib/entry-points";
 import { getPackageJson, isFile, touch, writePackageJson } from "../lib/fs";
 import type { SupportedManager } from "../lib/package-managers";
@@ -31,6 +31,7 @@ const initOptionsSchema = v.object({
     )
   ),
   entryPoints: v.optional(v.array(v.string())),
+  react: v.optional(v.boolean()),
 });
 
 program
@@ -42,23 +43,30 @@ program
     ).choices(supportedManagers)
   )
   .option("-e, --entry-points <entrypoints...>", "extra entry points")
+  .option("-r, --react", "include react specific code")
   .action(async (options: unknown) => {
     intro("Project initialisation");
+
+    const parsedOptions = v.parse(initOptionsSchema, options);
+    let { packageManager, react } = parsedOptions;
+    const { entryPoints = [] } = parsedOptions;
+
+    if (react === undefined) {
+      const result = await confirm({
+        message: "Include React code?",
+      });
+      ensureNotCancelled(result);
+      react = result;
+    }
 
     const allTemplates = (
       await readdir(join(__dirname, "templates"), { recursive: true })
     ).filter((filename) => isFile(join(__dirname, "templates", filename)));
     for (const template of allTemplates) {
-      await templates.copyTemplate(template);
+      await templates.copyTemplate(template, { react });
     }
 
     await execFile("git", ["init"]);
-
-    const { packageManager: pm, entryPoints = [] } = v.parse(
-      initOptionsSchema,
-      options
-    );
-    let packageManager = pm;
     if (!packageManager) {
       const result = await select<SupportedManager>({
         message: "Choose a package manager",
@@ -79,7 +87,7 @@ program
       log.info(picocolors.gray("No package manager specific templates"));
     }
     for (const pmTemplate of pmTemplates) {
-      await templates.copyTemplate(pmTemplate, undefined, packageManager);
+      await templates.copyTemplate(pmTemplate, { react, packageManager });
     }
     const lifecycles = initLifecycles[packageManager];
 
@@ -169,6 +177,9 @@ program
             message("Dependencies installed");
           }
           const devDepsProcessed = processDepMap(devDeps);
+          if (react) {
+            devDepsProcessed.push(...processDepMap(reactDevDeps));
+          }
           if (devDepsProcessed.length) {
             await execFile(packageManager, [
               commands.install.command,

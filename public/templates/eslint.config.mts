@@ -4,11 +4,11 @@ import eslintPluginImportX from "eslint-plugin-import-x";
 import globals from "globals";
 import tseslint from "typescript-eslint";
 import vitest from "eslint-plugin-vitest";
-/*
+/* react:start
 import pluginReact from "eslint-plugin-react";
 import hooksPlugin from "eslint-plugin-react-hooks";
 import react from "@eslint-react/eslint-plugin";
-*/
+react:end */
 
 export default tseslint.config(
   {
@@ -30,15 +30,15 @@ export default tseslint.config(
       },
     },
     settings: {
-      /*
+      /* react:start
       react: { version: "detect" },
-      */
+      react:end */
     },
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
-  /*
+  /* react:start
   // @ts-ignore
   pluginReact.configs.flat.recommended,
   // @ts-ignore
@@ -69,17 +69,17 @@ export default tseslint.config(
       },
     },
   },
-  */
+  react:end */
   eslintPluginImportX.flatConfigs.recommended,
   eslintPluginImportX.flatConfigs.typescript,
-  /*
+  /* react:start
   {
     plugins: {
       "react-hooks": hooksPlugin,
     },
     rules: hooksPlugin.configs.recommended.rules,
   },
-  */
+  react:end */
   {
     rules: {
       "@typescript-eslint/array-type": ["error", { default: "generic" }],
@@ -132,11 +132,11 @@ export default tseslint.config(
           warnOnUnassignedImports: true,
         },
       ],
-      /*
+      /* react:start
       "react/prop-types": "off",
       "@eslint-react/no-forward-ref": "error",
       "@eslint-react/prefer-read-only-props": "off",
-      */
+      react:end */
       "@typescript-eslint/consistent-type-imports": [
         "error",
         { fixStyle: "separate-type-imports" },
